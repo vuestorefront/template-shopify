@@ -9,9 +9,11 @@ const state = reactive({
   isWishlistSidebarOpen: false,
   isLoginModalOpen: false,
   isCategoryGridView: true,
-  isFilterSidebarOpen: false
+  isFilterSidebarOpen: false,
+  isNavigationSidebarOpen: false
 });
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 const useUiState = () => {
   const isCartSidebarOpen = computed(() => state.isCartSidebarOpen);
   const toggleCartSidebar = () => {
@@ -21,6 +23,11 @@ const useUiState = () => {
   const isWishlistSidebarOpen = computed(() => state.isWishlistSidebarOpen);
   const toggleWishlistSidebar = () => {
     state.isWishlistSidebarOpen = !state.isWishlistSidebarOpen;
+  };
+
+  const isNavigationSidebarOpen = computed(() => state.isNavigationSidebarOpen);
+  const toggleNavigationSidebar = () => {
+    state.isNavigationSidebarOpen = !state.isNavigationSidebarOpen;
   };
 
   const isLoginModalOpen = computed(() => state.isLoginModalOpen);
@@ -44,11 +51,13 @@ const useUiState = () => {
     isLoginModalOpen,
     isCategoryGridView,
     isFilterSidebarOpen,
+    isNavigationSidebarOpen,
     toggleCartSidebar,
     toggleWishlistSidebar,
     toggleLoginModal,
     toggleCategoryGridView,
-    toggleFilterSidebar
+    toggleFilterSidebar,
+    toggleNavigationSidebar
   };
 };
 
