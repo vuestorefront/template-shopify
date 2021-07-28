@@ -5,12 +5,13 @@
       src="/error/error.svg"
       alt="leaves"
     />
-    <SfHeading
-      :title="error.statusCode === 404 ? 'Page not found' : 'An error occured'"
-      :level="2"
-      :description="error.statusCode === 404 ? 'We are sorry that we can’t find the page, please go back or try again' : 'Please go back or try again'"
-      class="heading sf-heading--no-underline"
+     <SfHeading
+      :title="error.statusCode === 404 ? error.message ? error.message : 'Item not found' : 'An error occured'"
+      :level="1"
+      class="sf-heading--no-underline sf-heading--center page-title"
     />
+    <div class="small-container text-center">
+      <p>{{ error.statusCode === 404 ? 'We can\'t find the item you are looking for. Please try searching or viewing all of our items.' : 'Please go back or try again' }}</p>
     <div class="actions">
       <SfButton link="/" class="sf-button--full-width actions__button">
         Return home
@@ -19,12 +20,16 @@
         Back
       </SfButton>
     </div>
+    </div>
   </div>
 </template>
 <script>
 import { SfButton, SfImage, SfHeading } from '@storefront-ui/vue';
 export default {
+  name: 'ErrorLayout',
+
   props: ['error'],
+
   components: { SfButton, SfImage, SfHeading }
 };
 </script>
