@@ -93,6 +93,7 @@
               "
               v-else
             />
+<<<<<<< HEAD
           </div>
         </div>
         <div>
@@ -164,6 +165,90 @@
                 class="sf-add-to-cart__button"
                 :disabled="loading"
                 @click="addingToCart({ product, quantity: parseInt(qty) })"
+=======
+          </div>
+        </div>
+      <div>
+        <p class="product__description desktop-only" v-if="productDescription">
+          {{ productDescription }}
+        </p>
+        <SfButton
+          data-cy="product-btn_size-guide"
+          class="sf-button--text desktop-only product__guide"
+        >
+          {{ $t("Size guide") }}
+        </SfButton>
+        <SfSelect
+          data-cy="product-select_size"
+          v-if="options.Size"
+          @input="(size) => updateFilter({ size })"
+          :value="configuration.size || options.Size[0].value"
+          label="Size"
+          class="sf-select--underlined product__select-size"
+          :required="true"
+        >
+          <SfSelectOption
+            v-for="size in options.Size"
+            :key="size.value"
+            :value="size.value"
+          >
+            {{ size.value }}
+          </SfSelectOption>
+        </SfSelect>
+        <div
+          v-if="options.Color && options.Color.length > 1"
+          class="product__colors desktop-only"
+        >
+          <p class="product__color-label">{{ $t("Color") }}:</p>
+          <SfColor
+            data-cy="product-color_update"
+            v-for="(color, i) in options.Color"
+            :key="i"
+            :color="color.value"
+            class="product__color"
+            @click="updateFilter({ color })"
+            :selected="
+              configuration.color
+                ? configuration.color.value === color.value
+                  ? true
+                  : false
+                : i === 0
+                ? true
+                : false
+            "
+          />
+        </div>
+        <SfAddToCart
+          data-cy="product-cart_add"
+          :stock="stock"
+          v-model="qty"
+          :canAddToCart="stock > 0"
+          class="product__add-to-cart"
+          v-if="productGetters.getStockStatus(product) === true"
+        >
+          <template #add-to-cart-btn>
+            <SfButton
+              class="sf-add-to-cart__button"
+              :disabled="loading"
+              @click="addingToCart({ product, quantity: parseInt(qty) })"
+            >
+              Add to Bag
+            </SfButton>
+          </template>
+        </SfAddToCart>
+        <LazyHydrate when-idle>
+          <SfTabs :open-tab="1" class="product__tabs">
+            <SfTab data-cy="product-tab_description" title="Description">
+              <div class="product__description" v-if="productDescriptionHtml">
+                <div v-html="productDescriptionHtml"></div>
+              </div>
+              <SfProperty
+                v-for="(property, i) in properties"
+                :key="i"
+                :name="property.name"
+                :value="property.value"
+                class="product__property"
+>>>>>>> upstream/master
               >
                 Add to Bag
               </SfButton>
@@ -324,7 +409,10 @@ export default {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   setup(props, context) {
     const breadcrumbs = ref([]);
+<<<<<<< HEAD
     const atttLbl = '';
+=======
+>>>>>>> upstream/master
     const qty = ref(1);
     const { slug } = context.root.$route.params;
     const {
@@ -419,11 +507,15 @@ export default {
     });
 
     onSSR(async () => {
+<<<<<<< HEAD
       await search({ slug, selectedOptions: configuration.value }).then(() => {
         if (productTitle.value === 'Product\'s name') {
           return context.root.error({ statusCode: 404, message: 'This product could not be found' });
         }
       });
+=======
+      await search({ slug });
+>>>>>>> upstream/master
       await searchRelatedProducts({ productId: id.value, related: true });
     });
 
@@ -472,8 +564,12 @@ export default {
       productloading,
       productGallery,
       productGetters,
+<<<<<<< HEAD
       setBreadcrumb,
       atttLbl
+=======
+      setBreadcrumb
+>>>>>>> upstream/master
     };
   },
   components: {

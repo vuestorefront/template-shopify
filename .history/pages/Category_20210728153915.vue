@@ -137,7 +137,11 @@
               :is-on-wishlist="false"
               class="products__product-card-horizontal"
               @click:wishlist="addItemToWishlist({ product })"
+<<<<<<< HEAD
+              @click:add-to-cart="HandleAddTocart({ product, qty:1 })"
+=======
               @click:add-to-cart="HandleAddTocart({ product, quantity:1 })"
+>>>>>>> upstream/master
               :link="
                 localePath(
                   `/p/${productGetters.getId(product)}/${productGetters.getSlug(
