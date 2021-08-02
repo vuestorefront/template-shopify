@@ -216,8 +216,7 @@
         </div>
       </div>
     </div>
-    </div>
-    <LazyHydrate when-visible>
+  <LazyHydrate when-visible>
       <RelatedProducts
         :products="relatedProducts"
         :loading="relatedLoading"
