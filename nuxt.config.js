@@ -249,6 +249,10 @@ export default {
             }
           }
         }
+      ],
+      preCaching: [
+        '//shopify-pwa-beta.aureatelabs.com/c/**',
+        '//shopify-pwa-beta.aureatelabs.com/'
       ]
     }
   }
