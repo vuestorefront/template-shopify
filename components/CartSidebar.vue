@@ -5,8 +5,8 @@
       title="Shopping Bag"
       :subtitle="`${totalItems} items`"
       class="sf-sidebar--right"
-      @close="toggleCartSidebar"
       :persistent="true"
+      @close="toggleCartSidebar"
     >
       <template #bar>
         <div></div>
@@ -28,11 +28,11 @@
       <transition name="sf-collapse-top" mode="out-in">
         <div class="notifications">
           <SfNotification
+            v-if="!isLoadervisible"
             :visible="visible"
             title="Are you sure?"
             message="Are you sure you would like to remove this item from the shopping cart?"
             type="secondary"
-            v-if="!isLoadervisible"
           >
             <template #action>
               <div class="button-wrap">
@@ -59,8 +59,8 @@
             <transition-group name="sf-fade" tag="div">
               <template v-for="product in products">
                 <SfCollectedProduct
-                  data-cy="collected-product-cart-sidebar"
                   :key="cartGetters.getItemSku(product)"
+                  data-cy="collected-product-cart-sidebar"
                   :image="cartGetters.getItemImage(product)"
                   :stock="99999"
                   :qty="
@@ -68,9 +68,9 @@
                       ? cartGetters.getItemQty(product)
                       : 1
                   "
+                  class="collected-product"
                   @input="updateItemQty({ product, quantity: $event })"
                   @click:remove="ConfirmRemove({ product })"
-                  class="collected-product"
                 >
                   <template #title>
                     <div class="sf-collected-product__title">
@@ -95,8 +95,8 @@
                   <template #price>
                     <SfPrice class="sf-product-card__price">
                       <template
-                        #special
                         v-if="cartGetters.getItemPrice(product).special"
+                        #special
                       >
                         <ins class="sf-price__special">{{
                           $n(
@@ -107,8 +107,8 @@
                       </template>
                       <template #old><span /></template>
                       <template
-                        #regular
                         v-if="cartGetters.getItemPrice(product).regular > 0"
+                        #regular
                       >
                         <del class="sf-price__old">{{
                           $n(
@@ -158,7 +158,7 @@
             <SfHeading
               title=""
               description="Free Shipping On Orders with Subtotals over $100"
-              customClass="sf-heading--left"
+              custom-class="sf-heading--left"
             >
               <template #description="{ description }">
                 <div class="cart-free-shipping-text">
@@ -167,8 +167,8 @@
               </template>
             </SfHeading>
             <SfLink
-              @click="handleCheckout(checkoutURL, parseFloat(totals.subtotal))"
               link="javascript:void(0);"
+              @click="handleCheckout(checkoutURL, parseFloat(totals.subtotal))"
             >
               <SfButton
                 class="
@@ -208,10 +208,10 @@ import {
   SfNotification,
   SfLoader
 } from '@storefront-ui/vue';
-import { computed } from '@vue/composition-api';
+import { computed, onBeforeMount } from '@vue/composition-api';
 import { useCart, useUser, cartGetters } from '@vue-storefront/shopify';
-import { useUiState, useUiNotification } from '~/composables';
 import { onSSR } from '@vue-storefront/core';
+import { useUiState, useUiNotification } from '~/composables';
 
 export default {
   name: 'Cart',
@@ -285,7 +285,7 @@ export default {
     }
   },
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  setup() {
+  setup(props, {root}) {
     const { isCartSidebarOpen, toggleCartSidebar } = useUiState();
     const { cart, removeItem, updateItemQty, load: loadCart } = useCart();
     const { isAuthenticated } = useUser();
@@ -297,6 +297,13 @@ export default {
 
     onSSR(async () => {
       await loadCart();
+    });
+    onBeforeMount(async () => {
+        await loadCart().then(() => {
+          if (cart && cart.value.orderStatusUrl !== null) {
+            root.$cookies.remove(`${root.$config.appKey}_cart_id`); 
+          }
+        });
     });
 
     return {
