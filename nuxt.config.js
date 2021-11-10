@@ -148,7 +148,10 @@ export default {
           lastCommit: process.env.LAST_COMMIT || ''
         })
       })
-    ]
+    ],
+    extractCSS: {
+      ignoreOrder: true,
+    }
   },
   router: {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
