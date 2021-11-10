@@ -208,7 +208,7 @@ import {
   SfNotification,
   SfLoader
 } from '@storefront-ui/vue';
-import { computed } from '@vue/composition-api';
+import { computed, onBeforeMount } from '@vue/composition-api';
 import { useCart, useUser, cartGetters } from '@vue-storefront/shopify';
 import { useUiState, useUiNotification } from '~/composables';
 import { onSSR } from '@vue-storefront/core';
@@ -298,7 +298,13 @@ export default {
     onSSR(async () => {
       await loadCart();
     });
-
+    onBeforeMount(async () => {
+        await loadCart().then(() => {
+          if (cart && cart.value.orderStatusUrl !== null) {
+            root.$cookies.remove(`${root.$config.appKey}_cart_id`); 
+          }
+        });
+    });
     return {
       isAuthenticated,
       products,

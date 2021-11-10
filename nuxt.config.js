@@ -7,8 +7,16 @@ export default {
     host: '0.0.0.0'
   },
   publicRuntimeConfig: {
-    appKey: 'vsf2Connector' + Date.now()
+    appKey: 'vsf2spcon',
+    appVersion: Date.now()
   },
+  privateRuntimeConfig: {
+    storeURL: process.env.SHOPIFY_DOMAIN,
+    storeToken: process.env.SHOPIFY_STOREFRONT_TOKEN
+  },
+  serverMiddleware: [
+    { path: '/custom', handler: '~/server-middleware/custom-features.js' }
+  ],
   head: {
     title: 'Shopify | Vue Storefront Next',
     meta: [
@@ -252,6 +260,10 @@ export default {
             }
           }
         }
+      ],
+      preCaching: [
+        '//shopify-pwa.aureatelabs.com/c/**',
+        '//shopify-pwa.aureatelabs.com/'
       ]
     }
   }
