@@ -93,3 +93,6 @@ version
 # e2e report
 **/tests/e2e/report
 **/test/e2e/report.json
+yarn.lock
+.nuxt
+static/sw.js
