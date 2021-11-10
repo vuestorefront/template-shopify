@@ -1,5 +1,5 @@
-require('isomorphic-fetch');
 import webpack from 'webpack';
+require('isomorphic-fetch');
 
 export default {
   server: {
@@ -158,7 +158,7 @@ export default {
       })
     ],
     extractCSS: {
-      ignoreOrder: true,
+      ignoreOrder: true
     }
   },
   router: {
@@ -226,7 +226,7 @@ export default {
       description:
         'This is the Shopify PWA app for VSF Next - Developed by Aureate labs',
       themeColor: '#5ece7b',
-      ogHost: 'shopify-pwa-beta.aureatelabs.com'
+      ogHost: 'shopify-pwa.aureatelabs.com'
     },
     icon: {
       iconSrc: 'src/static/android-icon-512x512.png'
