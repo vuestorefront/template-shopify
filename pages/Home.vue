@@ -69,7 +69,7 @@ import {
 } from '@vue-storefront/shopify';
 import {
   computed
-} from '@vue/composition-api';
+} from '@nuxtjs/composition-api';
 import { onSSR } from '@vue-storefront/core';
 import LazyHydrate from 'vue-lazy-hydration';
 import MobileStoreBanner from '~/components/MobileStoreBanner.vue';
@@ -233,7 +233,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="postcss" scoped>
 .article-meta h4 a {
   color: #111111;
   font-weight: 600;
@@ -338,7 +338,7 @@ export default {
 }
 
 .carousel {
-  margin: 0 calc(#{var(--spacer-sm)} * -1) 0 0;
+  margin: 0 calc(var(--spacer-sm) * -1) 0 0;
   @include for-desktop {
     margin: 0;
   }

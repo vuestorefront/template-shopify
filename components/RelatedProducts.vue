@@ -50,13 +50,13 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="postcss" scoped>
 .section {
   margin-top: var(--spacer-base);
 }
 
 .carousel {
-  margin: 0 calc(#{var(--spacer-sm)} * -1) 0 0;
+    margin: 0 calc(var(--spacer-sm) * -1) 0 0;
   @include for-desktop {
     margin: 0;
   }
