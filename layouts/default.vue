@@ -1,74 +1,87 @@
 <template>
   <div>
-    <LazyHydrate when-visible>
-      <TopBar class="desktop-only" />
-    </LazyHydrate>
-
+    <TopBar class="desktop-only" />
     <AppHeader />
-
     <div id="layout">
-      <nuxt :key="route.fullPath"/>
-
-      <BottomNavigation />
-      <CartSidebar />
-      <WishlistSidebar />
-      <LoginModal />
-      <Notification />
+      <nuxt :key="$route.fullPath"/>
+      <client-only>
+        <BottomNavigation />
+      </client-only>
+      <client-only>
+        <CartSidebar />
+      </client-only>
+      <client-only>
+        <WishlistSidebar />
+      </client-only>
+      <client-only>
+        <LoginModal />
+      </client-only>
+      <client-only>
+        <Notification />
+      </client-only>
     </div>
-    <LazyHydrate when-visible>
-      <AppFooter />
-    </LazyHydrate>
+    <div data-section-name="footerSection" class="footer-section">
+      <AppFooter v-if="sectionList.footerSection"/>
+    </div>
   </div>
 </template>
 
 <script>
 import AppHeader from '~/components/AppHeader.vue';
-import BottomNavigation from '~/components/BottomNavigation.vue';
-import AppFooter from '~/components/AppFooter.vue';
 import TopBar from '~/components/TopBar.vue';
-import CartSidebar from '~/components/CartSidebar.vue';
-import WishlistSidebar from '~/components/WishlistSidebar.vue';
-import LoginModal from '~/components/LoginModal.vue';
-import LazyHydrate from 'vue-lazy-hydration';
-import Notification from '~/components/Notification';
-import { onSSR } from '@vue-storefront/core';
-import { useRoute } from '@nuxtjs/composition-api';
-import { useCart, useStore, useUser, useWishlist } from '@vue-storefront/shopify';
-
+import { onBeforeMount, nextTick, onMounted, onUnmounted, ref } from '@nuxtjs/composition-api';
+import { useUser } from '@vue-storefront/shopify';
 export default {
   name: 'DefaultLayout',
-
   components: {
-    LazyHydrate,
     TopBar,
     AppHeader,
-    BottomNavigation,
-    AppFooter,
-    CartSidebar,
-    WishlistSidebar,
-    LoginModal,
-    Notification
+    BottomNavigation: () => import('~/components/BottomNavigation.vue'),
+    AppFooter: () => import('~/components/AppFooter.vue'),
+    CartSidebar: () => import('~/components/CartSidebar.vue'),
+    WishlistSidebar: () => import('~/components/WishlistSidebar.vue'),
+    LoginModal: () => import('~/components/LoginModal.vue'),
+    Notification: () => import('~/components/Notification'),
   },
 
-  setup() {
-    const route = useRoute();
-    const { load: loadStores } = useStore();
-    const { load: loadUser } = useUser();
-    const { load: loadCart } = useCart();
-    const { load: loadWishlist } = useWishlist();
-
-    onSSR(async () => {
-      await Promise.all([
-        loadStores(),
-        loadUser(),
-        loadCart(),
-        loadWishlist()
-      ]);
+  setup(props, {root}) {
+    const sectionList = ref({
+      footerSection: false,
     });
-
-    return {
-      route
-    };
+    const { load: loadUser } = useUser();
+    let observer;
+    onBeforeMount(async () => {
+      await loadUser();
+    });
+    onMounted(() => {
+      nextTick(() => {
+        const visibleSection = (sections) => {
+          sections.forEach((entry) => {
+            if (!entry.isIntersecting) {
+              return;
+            }
+            if (entry.intersectionRatio > 0) {
+              sectionList.value[
+                entry.target.getAttribute("data-section-name")
+              ] = true;
+            }
+          });
+        };
+        const options = {
+          rootMargin: root.$device.isMobile ? "50px 0px 0px 0px" : "-250px 0px 0px 0px",
+          threshold: 0,
+        };
+        observer = new IntersectionObserver(visibleSection, options);
+        const section = document.querySelector(".footer-section");
+        section && observer.observe(section);
+      });
+    });
+    onUnmounted(() => {
+      observer.disconnect();
+    });
+    return{
+      sectionList
+    }
   }
 };
 </script>
