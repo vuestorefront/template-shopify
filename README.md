@@ -1,4 +1,4 @@
-# Vue Storefron Shopify Template
+# Vue Storefront Shopify Template
 
 Vue Storefront 2 template for Shopify.
 
