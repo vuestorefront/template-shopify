@@ -12,8 +12,8 @@
         :class="hero.className"
       />
     </SfHero>
-    <LazyHydrate when-visible>
-      <SfBannerGrid :banner-grid="1" class="banner-grid">
+    <section class="section-box" data-section-name="homeBannerGrid">
+      <SfBannerGrid :banner-grid="1" class="banner-grid" v-if="sectionList.homeBannerGrid">
         <template v-for="item in banners" #[item.slot]>
           <SfBanner
             :key="item.slot"
@@ -26,27 +26,29 @@
           />
         </template>
       </SfBannerGrid>
-    </LazyHydrate>
-    <LazyHydrate when-visible>
+    </section>
+    <section class="section-box" data-section-name="homeRelatedProducts">
       <RelatedProducts
+        v-if="sectionList.homeRelatedProducts"
         :products="products"
         :loading="productsLoading"
         title="Match it with"
       />
-    </LazyHydrate>
+    </section>
 
-    <LazyHydrate when-visible>
+    <section class="section-box" data-section-name="homeNewsletters">
       <SfCallToAction
+        v-if="sectionList.homeNewsletters"
         title="Subscribe to Newsletters"
         button-text="Subscribe"
         description="Be aware of upcoming sales and events. Receive gifts and special offers!"
         image="https://cdn.shopify.com/s/files/1/0407/1902/4288/files/newsletter_1240x202.jpg?v=1616496568"
         class="call-to-action"
       />
-    </LazyHydrate>
-    <LazyHydrate when-visible>
-      <MobileStoreBanner />
-    </LazyHydrate>
+    </section>
+    <section class="section-box" data-section-name="homeMobileStoreBanner">
+      <MobileStoreBanner v-if="sectionList.homeMobileStoreBanner"/>
+    </section>
   </div>
 </template>
 <script type="module">
@@ -71,15 +73,18 @@ import {
   computed
 } from '@nuxtjs/composition-api';
 import { onSSR } from '@vue-storefront/core';
-import LazyHydrate from 'vue-lazy-hydration';
-import MobileStoreBanner from '~/components/MobileStoreBanner.vue';
-import RelatedProducts from '~/components/RelatedProducts.vue';
-
+import {
+  ref,
+  onMounted,
+  onUnmounted,
+  nextTick,
+} from "@vue/composition-api";
 export default {
   name: 'Home',
   components: {
     SfHero,
-    RelatedProducts,
+    RelatedProducts: () => import("~/components/RelatedProducts.vue"),
+    MobileStoreBanner: () => import("~/components/MobileStoreBanner.vue"),
     SfBanner,
     SfCallToAction,
     SfSection,
@@ -89,8 +94,6 @@ export default {
     SfHeading,
     SfArrow,
     SfButton,
-    MobileStoreBanner,
-    LazyHydrate
   },
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   setup() {
@@ -100,7 +103,42 @@ export default {
       loading: productsLoading
     } = useProduct('relatedProducts');
     const { cart, load: loadCart, addItem: addToCart, isInCart } = useCart();
-
+    const sectionList = ref({
+      homeBannerGrid: false,
+      homeRelatedProducts: false,
+      homeNewsletters: false,
+      homeMobileStoreBanner: false,
+    });
+    let observer;
+    onMounted(() => {
+      nextTick(() => {
+        const visibleSection = (entries, observer) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) {
+              return;
+            }
+            if (entry.isIntersecting && entry.intersectionRatio > 0) {
+              sectionList.value[
+                entry.target.getAttribute("data-section-name")
+              ] = true;
+            }
+          });
+        };
+        const options = {
+          rootMargin: "-50px 0px 0px 0px",
+          threshold: 0,
+        };
+        observer = new IntersectionObserver(visibleSection, options);
+        const sections = document.querySelectorAll(".section-box");
+        sections &&
+          sections.forEach((section) => {
+            observer.observe(section);
+          });
+      });
+    });
+    onUnmounted(() => {
+      observer.disconnect();
+    });
     onSSR(async () => {
       await productsSearch({ limit: 8 });
       await loadCart();
@@ -113,7 +151,8 @@ export default {
       productsLoading,
       productGetters,
       addToCart,
-      isInCart
+      isInCart,
+      sectionList
     };
   },
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -234,6 +273,9 @@ export default {
 </script>
 
 <style lang="postcss" scoped>
+.section-box {
+  min-height: 30vh;
+}
 .article-meta h4 a {
   color: #111111;
   font-weight: 600;
