@@ -66,19 +66,15 @@ import {
 } from '@storefront-ui/vue';
 import {
   useProduct,
-  useCart,
   productGetters
 } from '@vue-storefront/shopify';
-import {
-  computed
-} from '@nuxtjs/composition-api';
-import { onSSR } from '@vue-storefront/core';
 import {
   ref,
   onMounted,
   onUnmounted,
   nextTick,
-} from "@vue/composition-api";
+  computed
+} from "@nuxtjs/composition-api";
 export default {
   name: 'Home',
   components: {
@@ -102,7 +98,7 @@ export default {
       search: productsSearch,
       loading: productsLoading
     } = useProduct('relatedProducts');
-    const { cart, load: loadCart, addItem: addToCart, isInCart } = useCart();
+    let shownRelatedProducts = ref(false);
     const sectionList = ref({
       homeBannerGrid: false,
       homeRelatedProducts: false,
@@ -118,6 +114,10 @@ export default {
               return;
             }
             if (entry.isIntersecting && entry.intersectionRatio > 0) {
+              if (entry.target.getAttribute("data-section-name")=== 'homeRelatedProducts' && !shownRelatedProducts.value){
+                productsSearch({ limit: 8 });
+                shownRelatedProducts.value= true;
+              }
               sectionList.value[
                 entry.target.getAttribute("data-section-name")
               ] = true;
@@ -139,19 +139,12 @@ export default {
     onUnmounted(() => {
       observer.disconnect();
     });
-    onSSR(async () => {
-      await productsSearch({ limit: 8 });
-      await loadCart();
-    });
     return {
       products: computed(() =>
         productGetters.getFiltered(relatedProducts.value, { master: true })
       ),
-      getChkId: computed(() => cart.value.id),
       productsLoading,
       productGetters,
-      addToCart,
-      isInCart,
       sectionList
     };
   },

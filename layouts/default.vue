@@ -1,9 +1,13 @@
 <template>
   <div>
     <TopBar class="desktop-only" />
-    <AppHeader />
+    <AppHeader
+      :cartTotalItems="getCartTotalItems"
+      :isUserAuthenticated="getUserStatus"
+    />
     <div id="layout">
-      <nuxt :key="$route.fullPath"/>
+      <nuxt :key="$route.fullPath" />
+      <AppFooter />
       <client-only>
         <BottomNavigation />
       </client-only>
@@ -20,67 +24,39 @@
         <Notification />
       </client-only>
     </div>
-    <div data-section-name="footerSection" class="footer-section">
-      <AppFooter v-if="sectionList.footerSection"/>
-    </div>
   </div>
 </template>
 
 <script>
-import AppHeader from '~/components/AppHeader.vue';
-import TopBar from '~/components/TopBar.vue';
-import { onBeforeMount, nextTick, onMounted, onUnmounted, ref } from '@nuxtjs/composition-api';
-import { useUser } from '@vue-storefront/shopify';
+import AppHeader from "~/components/AppHeader.vue";
+import TopBar from "~/components/TopBar.vue";
+import { useUser, userGetters } from "@vue-storefront/shopify";
+import { computed, onBeforeMount} from "@nuxtjs/composition-api";
 export default {
-  name: 'DefaultLayout',
+  name: "DefaultLayout",
   components: {
     TopBar,
     AppHeader,
-    BottomNavigation: () => import('~/components/BottomNavigation.vue'),
-    AppFooter: () => import('~/components/AppFooter.vue'),
-    CartSidebar: () => import('~/components/CartSidebar.vue'),
-    WishlistSidebar: () => import('~/components/WishlistSidebar.vue'),
-    LoginModal: () => import('~/components/LoginModal.vue'),
-    Notification: () => import('~/components/Notification'),
+    BottomNavigation: () => import("~/components/BottomNavigation.vue"),
+    AppFooter: () => import("~/components/AppFooter.vue"),
+    CartSidebar: () => import("~/components/CartSidebar.vue"),
+    WishlistSidebar: () => import("~/components/WishlistSidebar.vue"),
+    LoginModal: () => import("~/components/LoginModal.vue"),
+    Notification: () => import("~/components/Notification"),
   },
-
-  setup(props, {root}) {
-    const sectionList = ref({
-      footerSection: false,
-    });
-    const { load: loadUser } = useUser();
-    let observer;
+  setup(props, {root}){
+    const { user: userInfo, load: loadUser } = useUser();
+    const firstName = computed(() => userGetters.getFirstName(userInfo.value));
+    const getUserStatus = computed(() => (firstName.value ? true : false));
+    const getCartTotalItems = computed(
+         () => root.$store.state.cartTotal
+    );
     onBeforeMount(async () => {
       await loadUser();
     });
-    onMounted(() => {
-      nextTick(() => {
-        const visibleSection = (sections) => {
-          sections.forEach((entry) => {
-            if (!entry.isIntersecting) {
-              return;
-            }
-            if (entry.intersectionRatio > 0) {
-              sectionList.value[
-                entry.target.getAttribute("data-section-name")
-              ] = true;
-            }
-          });
-        };
-        const options = {
-          rootMargin: root.$device.isMobile ? "50px 0px 0px 0px" : "-250px 0px 0px 0px",
-          threshold: 0,
-        };
-        observer = new IntersectionObserver(visibleSection, options);
-        const section = document.querySelector(".footer-section");
-        section && observer.observe(section);
-      });
-    });
-    onUnmounted(() => {
-      observer.disconnect();
-    });
     return{
-      sectionList
+      getUserStatus,
+      getCartTotalItems
     }
   }
 };

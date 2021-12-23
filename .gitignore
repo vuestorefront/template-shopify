@@ -63,6 +63,7 @@ typings/
 
 # nuxt.js build output
 .nuxt
+.history
 
 # theme
 _theme
