@@ -2,8 +2,8 @@
   <SfHeader
     data-cy="app-header"
     :search-value="term"
-    :cart-items-qty="cartTotalItems"
-    :account-icon="accountIcon"
+    :cartItemsQty="cartTotalItems"
+    :accountIcon="accountIcon"
     class="sf-header--has-mobile-search"
     @click:cart="toggleCartSidebar"
     @click:wishlist="toggleWishlistSidebar"
@@ -53,12 +53,11 @@
 <script type="module">
 import { SfHeader, SfImage, SfButton, SfBadge } from '@storefront-ui/vue';
 import useUiState from '~/composables/useUiState';
-import { onSSR } from '@vue-storefront/core';
 import { computed, ref } from '@nuxtjs/composition-api';
-
-import { useCart, useWishlist, useUser, cartGetters, useCategory } from '@vue-storefront/shopify';
+import { useCategory } from '@vue-storefront/shopify';
 import useUiHelpers from '~/composables/useUiHelpers';
 import LocaleSelector from './LocaleSelector';
+import { onSSR } from '@vue-storefront/core';
 
 
 
@@ -70,14 +69,15 @@ export default {
     SfButton,
     SfBadge
   },
+  props: {
+    cartTotalItems: Number,
+    isUserAuthenticated: Boolean,
+  },
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   setup(props, { root }) {
     const { toggleCartSidebar, toggleWishlistSidebar, toggleLoginModal } = useUiState();
     const { changeSearchTerm, getFacetsFromURL } = useUiHelpers();
-    const { isAuthenticated, load: loadUser } = useUser();
-    const { cart, load: loadCart } = useCart();
     const { search, categories } = useCategory('menuCategories');
-    const { load: loadWishlist } = useWishlist();
     const term = ref(getFacetsFromURL().term);
     const curCatSlug = ref(getFacetsFromURL().categorySlug);
     const cartTotalItems = computed(() => {
@@ -85,11 +85,11 @@ export default {
       return count ? count.toString() : null;
     });
 
-    const accountIcon = computed(() => isAuthenticated.value ? 'profile_fill' : 'profile');
+    const accountIcon = computed(() => props.isUserAuthenticated ? 'profile_fill' : 'profile');
 
     // TODO: https://github.com/DivanteLtd/vue-storefront/issues/4927
     const handleAccountClick = async () => {
-      if (isAuthenticated.value) {
+      if (props.isUserAuthenticated) {
         return root.$router.push('/my-account');
       }
 
@@ -97,15 +97,11 @@ export default {
     };
 
     onSSR(async () => {
-      await loadUser();
-      await loadCart();
-      await loadWishlist();
       await search({slug: ''});
     });
 
     return {
       accountIcon,
-      cartTotalItems,
       handleAccountClick,
       toggleCartSidebar,
       toggleWishlistSidebar,
