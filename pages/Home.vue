@@ -12,8 +12,8 @@
         :class="hero.className"
       />
     </SfHero>
-    <section class="section-box" data-section-name="homeBannerGrid">
-      <SfBannerGrid :banner-grid="1" class="banner-grid" v-if="sectionList.homeBannerGrid">
+    <LazyHydrate when-visible>
+      <SfBannerGrid :banner-grid="1" class="banner-grid">
         <template v-for="item in banners" #[item.slot]>
           <SfBanner
             :key="item.slot"
@@ -26,29 +26,27 @@
           />
         </template>
       </SfBannerGrid>
-    </section>
-    <section class="section-box" data-section-name="homeRelatedProducts">
+    </LazyHydrate>
+    <LazyHydrate when-visible>
       <RelatedProducts
-        v-if="sectionList.homeRelatedProducts"
         :products="products"
         :loading="productsLoading"
         title="Match it with"
       />
-    </section>
+    </LazyHydrate>
 
-    <section class="section-box" data-section-name="homeNewsletters">
+    <LazyHydrate when-visible>
       <SfCallToAction
-        v-if="sectionList.homeNewsletters"
         title="Subscribe to Newsletters"
         button-text="Subscribe"
         description="Be aware of upcoming sales and events. Receive gifts and special offers!"
         image="https://cdn.shopify.com/s/files/1/0407/1902/4288/files/newsletter_1240x202.jpg?v=1616496568"
         class="call-to-action"
       />
-    </section>
-    <section class="section-box" data-section-name="homeMobileStoreBanner">
-      <MobileStoreBanner v-if="sectionList.homeMobileStoreBanner"/>
-    </section>
+    </LazyHydrate>
+    <LazyHydrate when-visible>
+      <MobileStoreBanner />
+    </LazyHydrate>
   </div>
 </template>
 <script type="module">
@@ -66,21 +64,22 @@ import {
 } from '@storefront-ui/vue';
 import {
   useProduct,
+  useCart,
   productGetters
 } from '@vue-storefront/shopify';
 import {
-  ref,
-  onMounted,
-  onUnmounted,
-  nextTick,
   computed
-} from "@nuxtjs/composition-api";
+} from '@nuxtjs/composition-api';
+import { onSSR } from '@vue-storefront/core';
+import LazyHydrate from 'vue-lazy-hydration';
+import MobileStoreBanner from '~/components/MobileStoreBanner.vue';
+import RelatedProducts from '~/components/RelatedProducts.vue';
+
 export default {
   name: 'Home',
   components: {
     SfHero,
-    RelatedProducts: () => import("~/components/RelatedProducts.vue"),
-    MobileStoreBanner: () => import("~/components/MobileStoreBanner.vue"),
+    RelatedProducts,
     SfBanner,
     SfCallToAction,
     SfSection,
@@ -90,6 +89,8 @@ export default {
     SfHeading,
     SfArrow,
     SfButton,
+    MobileStoreBanner,
+    LazyHydrate
   },
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   setup() {
@@ -98,54 +99,21 @@ export default {
       search: productsSearch,
       loading: productsLoading
     } = useProduct('relatedProducts');
-    let shownRelatedProducts = ref(false);
-    const sectionList = ref({
-      homeBannerGrid: false,
-      homeRelatedProducts: false,
-      homeNewsletters: false,
-      homeMobileStoreBanner: false,
-    });
-    let observer;
-    onMounted(() => {
-      nextTick(() => {
-        const visibleSection = (entries, observer) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) {
-              return;
-            }
-            if (entry.isIntersecting && entry.intersectionRatio > 0) {
-              if (entry.target.getAttribute("data-section-name")=== 'homeRelatedProducts' && !shownRelatedProducts.value){
-                productsSearch({ limit: 8 });
-                shownRelatedProducts.value= true;
-              }
-              sectionList.value[
-                entry.target.getAttribute("data-section-name")
-              ] = true;
-            }
-          });
-        };
-        const options = {
-          rootMargin: "-50px 0px 0px 0px",
-          threshold: 0,
-        };
-        observer = new IntersectionObserver(visibleSection, options);
-        const sections = document.querySelectorAll(".section-box");
-        sections &&
-          sections.forEach((section) => {
-            observer.observe(section);
-          });
-      });
-    });
-    onUnmounted(() => {
-      observer.disconnect();
+    const { cart, load: loadCart, addItem: addToCart, isInCart } = useCart();
+
+    onSSR(async () => {
+      await productsSearch({ limit: 8 });
+      await loadCart();
     });
     return {
       products: computed(() =>
         productGetters.getFiltered(relatedProducts.value, { master: true })
       ),
+      getChkId: computed(() => cart.value.id),
       productsLoading,
       productGetters,
-      sectionList
+      addToCart,
+      isInCart
     };
   },
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -266,9 +234,6 @@ export default {
 </script>
 
 <style lang="postcss" scoped>
-.section-box {
-  min-height: 30vh;
-}
 .article-meta h4 a {
   color: #111111;
   font-weight: 600;

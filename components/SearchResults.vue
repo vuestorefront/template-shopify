@@ -6,8 +6,16 @@
       class="search"
     >
       <transition name="sf-fade" mode="out-in">
-        <div v-if="products && products.length > 0" class="search__wrapper-results" key="results">
-          <SfMegaMenuColumn :title="$t('Categories')" class="sf-mega-menu-column--pined-content-on-mobile search__categories">
+        <div
+          v-if="products && products.length > 0"
+          key="results"
+          class="search__wrapper-results"
+        >
+          <SfMegaMenuColumn
+            v-if="false"
+            :title="$t('Categories')"
+            class="sf-mega-menu-column--pined-content-on-mobile search__categories"
+          >
             <template #title="{title}">
               <SfMenuItem :label="title" @click="megaMenu.changeActive(title)">
                 <template #mobile-nav-icon>
@@ -16,8 +24,14 @@
               </SfMenuItem>
             </template>
             <SfList>
-              <SfListItem v-for="(category, key) in categories" :key="key">
-                <SfMenuItem :label="category.label" :link="localePath(`/c/${category.slug}`)">
+              <SfListItem
+                v-for="(category, key) in categories.items"
+                :key="key"
+              >
+                <SfMenuItem
+                  :label="category.label"
+                  :link="localePath(getCatLink(category))"
+                >
                   <template #mobile-nav-icon>
                     &#8203;
                   </template>
@@ -25,30 +39,53 @@
               </SfListItem>
             </SfList>
           </SfMegaMenuColumn>
-          <SfMegaMenuColumn :title="$t('Product suggestions')" class="sf-mega-menu-column--pined-content-on-mobile search__results">
+          <SfMegaMenuColumn
+            :title="$t('Product suggestions')"
+            class="sf-mega-menu-column--pined-content-on-mobile search__results"
+          >
             <template #title="{title}">
-              <SfMenuItem :label="title" class="sf-mega-menu-column__header search__header">
+              <SfMenuItem
+                :label="title"
+                class="sf-mega-menu-column__header search__header"
+              >
                 <template #mobile-nav-icon>
                   &#8203;
                 </template>
               </SfMenuItem>
             </template>
-            <SfScrollable class="results--desktop desktop-only" show-text="" hide-text="">
+            <SfScrollable
+              class="results--desktop desktop-only"
+              show-text=""
+              hide-text=""
+            >
               <div class="results-listing">
                 <SfProductCard
                   v-for="(product, index) in products"
                   :key="index"
                   class="result-card"
-                  :regular-price="$n(productGetters.getPrice(product).regular, 'currency')"
+                  :regular-price="
+                    $n(productGetters.getPrice(product).regular, 'currency')
+                  "
                   :score-rating="productGetters.getAverageRating(product)"
                   :reviews-count="7"
                   :image="productGetters.getCoverImage(product)"
                   :alt="productGetters.getName(product)"
                   :title="productGetters.getName(product)"
-                  :link="localePath(`/p/${productGetters.getId(product)}/${productGetters.getSlug(product)}`)"
-                  :is-in-wishlist="isInWishlist({ product })"
-                  @click:wishlist="!isInWishlist({ product }) ? addItemToWishlist({ product }) : removeProductFromWishlist(product)"
-                />
+                  :link="productGetters.getSlug(product)"
+                >
+                  <template slot="title">
+                    <SfButton
+                      :link="localePath(productGetters.getSlug(product))"
+                      class="sf-button--pure sf-product-card__link"
+                      data-testid="product-link"
+                    >
+                      <h3
+                        class="sf-product-card__title"
+                        v-html="productGetters.getName(product)"
+                      ></h3>
+                    </SfButton>
+                  </template>
+                </SfProductCard>
               </div>
             </SfScrollable>
             <div class="results--mobile smartphone-only">
@@ -56,57 +93,81 @@
                 v-for="(product, index) in products"
                 :key="index"
                 class="result-card"
-                :regular-price="$n(productGetters.getPrice(product).regular, 'currency')"
+                :regular-price="
+                  $n(productGetters.getPrice(product).regular, 'currency')
+                "
                 :score-rating="productGetters.getAverageRating(product)"
                 :reviews-count="7"
                 :image="productGetters.getCoverImage(product)"
                 :alt="productGetters.getName(product)"
                 :title="productGetters.getName(product)"
-                :link="localePath(`/p/${productGetters.getId(product)}/${productGetters.getSlug(product)}`)"
-                :is-in-wishlist="isInWishlist({ product })"
-                @click:wishlist="!isInWishlist({ product }) ? addItemToWishlist({ product }) : removeProductFromWishlist(product)"
-              />
+                :link="productGetters.getSlug(product)"
+              >
+                <template slot="title">
+                  <SfButton
+                    :link="localePath(productGetters.getSlug(product))"
+                    class="sf-button--pure sf-product-card__link"
+                    data-testid="product-link"
+                  >
+                    <h3
+                      class="sf-product-card__title"
+                      v-html="productGetters.getName(product)"
+                    ></h3>
+                  </SfButton>
+                </template>
+              </SfProductCard>
             </div>
           </SfMegaMenuColumn>
           <div class="action-buttons smartphone-only">
-            <SfButton class="action-buttons__button color-light" @click="$emit('close')">{{ $t('Cancel') }}</SfButton>
+            <SfButton
+              class="action-buttons__button color-light"
+              @click="$emit('close')"
+              >{{ $t('Cancel') }}</SfButton
+            >
           </div>
         </div>
         <div v-else key="no-results" class="before-results">
-          <SfImage src="/error/error.svg" class="before-results__picture" alt="error" loading="lazy"/>
-          <template v-if="term">
-            <p class="before-results__paragraph">{{ $t('We haven’t found any results for given phrase') }}</p>
-          </template>
-          <template v-else>
-            <p class="before-results__paragraph">{{ $t('You haven’t searched for items yet') }}</p>
-            <p class="before-results__paragraph">{{ $t('Let’s start now – we’ll help you') }}</p>
-          </template>
-          <SfButton class="before-results__button color-secondary smartphone-only" @click="$emit('close')">{{ $t('Go back') }}</SfButton>
+          <SfImage
+            src="/error/error.svg"
+            class="before-results__picture"
+            alt="error"
+            loading="lazy"
+          />
+          <p class="before-results__paragraph">
+            {{ $t('You haven’t searched for items yet') }}
+          </p>
+          <p class="before-results__paragraph">
+            {{ $t('Let’s start now – we’ll help you') }}
+          </p>
+          <SfButton
+            class="before-results__button color-secondary smartphone-only"
+            @click="$emit('close')"
+            >{{ $t('Go back') }}</SfButton
+          >
         </div>
       </transition>
     </SfMegaMenu>
   </div>
 </template>
+
 <script>
 import {
   SfMegaMenu,
   SfList,
-  SfBanner,
   SfProductCard,
   SfScrollable,
   SfMenuItem,
   SfButton,
   SfImage
 } from '@storefront-ui/vue';
-import { ref, watch, computed } from '@nuxtjs/composition-api';
-import { useWishlist, wishlistGetters, productGetters } from '@vue-storefront/shopify';
-
+import { ref, watch, computed } from '@vue/composition-api';
+import { productGetters } from '@vue-storefront/shopify';
+import useUiHelpers from '../composables/useUiHelpers';
 export default {
   name: 'SearchResults',
   components: {
     SfMegaMenu,
     SfList,
-    SfBanner,
     SfProductCard,
     SfScrollable,
     SfMenuItem,
@@ -119,47 +180,38 @@ export default {
       default: false
     },
     result: {
-      type: Object
-    },
-    term: {
-      type: String,
-      default: ''
+      type: Object,
+      default: () => ({})
     }
   },
   setup(props, { emit }) {
+    const { getCatLink } = useUiHelpers();
     const isSearchOpen = ref(props.visible);
     const products = computed(() => props.result?.products);
     const categories = computed(() => props.result?.categories);
-    const { addItem: addItemToWishlist, isInWishlist, removeItem: removeItemFromWishlist, wishlist } = useWishlist();
-
-    watch(() => props.visible, (newVal) => {
-      isSearchOpen.value = newVal;
-      if (isSearchOpen.value) {
-        document.body.classList.add('no-scroll');
-      } else {
-        document.body.classList.remove('no-scroll');
-        emit('removeSearchResults');
+    watch(
+      () => props.visible,
+      (newVal) => {
+        isSearchOpen.value = newVal;
+        if (isSearchOpen.value) {
+          document.body.classList.add('no-scroll');
+        } else {
+          document.body.classList.remove('no-scroll');
+          emit('removeSearchResults');
+        }
       }
-    });
-
-    const removeProductFromWishlist = (productItem) => {
-      const productsInWhishlist = computed(() => wishlistGetters.getItems(wishlist.value));
-      const product = productsInWhishlist.value.find(wishlistProduct => wishlistProduct.variant.sku === productItem.sku);
-      removeItemFromWishlist({ product });
-    };
-
+    );
     return {
+      getCatLink,
       isSearchOpen,
       productGetters,
       products,
-      categories,
-      addItemToWishlist,
-      isInWishlist,
-      removeProductFromWishlist
+      categories
     };
   }
 };
 </script>
+
 <style lang="scss" scoped>
 .search {
   position: absolute;
@@ -184,7 +236,7 @@ export default {
     flex: 0 0 220px;
   }
   &__results {
-    flex: 1
+    flex: 1;
   }
   &__header {
     margin-left: var(--spacer-sm);
@@ -209,7 +261,7 @@ export default {
     justify-content: space-around;
     background: var(--c-white);
     padding: var(--spacer-base) var(--spacer-sm);
-    --product-card-max-width: 9rem ;
+    --product-card-max-width: 9rem;
   }
 }
 .see-all {
@@ -234,7 +286,6 @@ export default {
     margin: var(--spacer-2xs) 0;
   }
 }
-
 .before-results {
   box-sizing: border-box;
   padding: var(--spacer-base) var(--spacer-sm) var(--spacer-2xl);
