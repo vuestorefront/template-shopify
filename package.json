@@ -13,13 +13,14 @@
     "test:e2e": "start-server-and-test dev http://localhost:3000 test:e2e:run"
   },
   "dependencies": {
+    "@nuxtjs/device": "^2.1.0",
     "@nuxtjs/pwa": "^3.3.5",
     "@nuxtjs/style-resources": "^1.0.0",
     "@storefront-ui/vue": "^0.11.4",
     "@vue-storefront/middleware": "~2.5.0",
     "@vue-storefront/nuxt": "~2.5.0",
     "@vue-storefront/nuxt-theme": "~2.5.0",
-    "@vue-storefront/shopify": "1.0.9",
+    "@vue-storefront/shopify": "1.0.10",
     "cookie-universal-nuxt": "^2.1.3",
     "core-js": "^3.19.1",
     "isomorphic-fetch": "^2.2.1",

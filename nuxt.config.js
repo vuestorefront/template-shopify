@@ -4,12 +4,22 @@ import webpack from 'webpack';
 /** @type { import('@nuxt/types').NuxtConfig } */ 
 const config = {
   publicRuntimeConfig: {
-    appKey: 'vsf2spcon',
+    appKey: 'vsf2spcon_',
     appVersion: Date.now()
   },
   privateRuntimeConfig: {
     storeURL: process.env.SHOPIFY_DOMAIN,
     storeToken: process.env.SHOPIFY_STOREFRONT_TOKEN
+  },
+  render: {
+    bundleRenderer: {
+      shouldPreload: (file, type) => {
+        return ['font'].includes(type)
+      }
+    },
+    static: {
+      maxAge: 1000 * 60 * 60 * 24 * 7
+    }
   },
   serverMiddleware: [
     { path: '/custom', handler: '~/server-middleware/custom-features.js' }
@@ -28,24 +38,6 @@ const config = {
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-      {
-        rel: 'preconnect',
-        href: 'https://fonts.gstatic.com',
-        crossorigin: 'crossorigin'
-      },
-      {
-        rel: 'preload',
-        href:
-          'https://fonts.googleapis.com/css?family=Raleway:300,400,400i,500,600,700|Roboto:300,300i,400,400i,500,700&display=swap',
-        as: 'style'
-      },
-      {
-        rel: 'stylesheet',
-        href:
-          'https://fonts.googleapis.com/css?family=Raleway:300,400,400i,500,600,700|Roboto:300,300i,400,400i,500,700&display=swap',
-        media: 'print',
-        onload: 'this.media=\'all\''
-      }
     ]
   },
   loading: { color: '#fff' },
@@ -58,6 +50,7 @@ const config = {
     '@nuxtjs/pwa',
     '@nuxt/typescript-build',
     '@nuxtjs/style-resources',
+    '@nuxtjs/device',
     [
       '@vue-storefront/nuxt',
       {
@@ -157,7 +150,6 @@ const config = {
     ],
     extend(config) {
       config.resolve.extensions.push('.mjs')
-
       config.module.rules.push({
         test: /\.mjs$/,
         include: /node_modules/,
@@ -180,7 +172,7 @@ const config = {
   },
   pwa: {
     manifest: {
-      name: 'VSF Next: Shopify APP',
+      name: 'VSF2: Shopify APP',
       lang: 'en',
       shortName: 'SPVSF2',
       startUrl: '/',
@@ -227,7 +219,7 @@ const config = {
       ]
     },
     meta: {
-      name: 'VSF Next: Shopify APP',
+      name: 'VSF2: Shopify APP',
       author: 'Aureate labs',
       backgroundColor: '#5ece7b',
       description:
@@ -242,35 +234,54 @@ const config = {
       offlineStrategy: 'StaleWhileRevalidate',
       runtimeCaching: [
         {
-          // Match any request that ends with .png, .jpg, .jpeg or .svg.
-          urlPattern: /\.(?:png|jpg|jpeg|svg|woff|woff2)$/,
+          // Match any request that ends with .png, .jpg, .jpeg or .svg .gif.
+          urlPattern: /\.(?:png|jpg|jpeg|svg|woff|woff2|webp|json|gif)$/,
           // Apply a cache-first strategy.
-          handler: 'CacheFirst',
+          handler: "CacheFirst",
           options: {
             // Use a custom cache name.
-            cacheName: 'SPVSF2Assets',
-
-            // Only cache 100 images.
+            cacheName: "SPVSF2Assets",
+            // Only cache 100 assets.
             expiration: {
-              maxEntries: 100
-            }
-          }
+              maxEntries: 100,
+              maxAgeSeconds: 7200,
+            },
+          },
         },
         {
-          urlPattern: /^\/(?:(c)?(\/.*)?)$/,
-          handler: 'StaleWhileRevalidate',
-          strategyOptions: {
-            cacheName: 'SPVSF2cached',
-            cacheExpiration: {
-              maxEntries: 200,
-              maxAgeSeconds: 3600
-            }
-          }
-        }
+          urlPattern: process.env.NODE_ENV !== 'production' ? `//${process.env.BASE_URL}/.*` : `//${process.env.BASE_URL_PRODUCTION}/.*`,
+          handler: 'CacheFirst',
+          method: 'GET',
+          strategyOptions: {cacheableResponse: {statuses: [0, 200]}}
+        },
       ],
       preCaching: [
-        '//shopify-pwa.aureatelabs.com/c/**',
-        '//shopify-pwa.aureatelabs.com/'
+        '/favicon.ico',
+        '/icon.png',
+        '/country-state.json',
+        '/error/error.svg',
+        '/homepage/apple.png',
+        '/homepage/bannerA.webp',
+        '/homepage/bannerB.webp',
+        '/homepage/bannerC.webp',
+        '/homepage/bannerD.png',
+        '/homepage/bannerE.webp',
+        '/homepage/bannerF.webp',
+        '/homepage/bannerG.webp',
+        '/homepage/bannerH.webp',
+        '/homepage/google.png',
+        '/homepage/imageAd.webp',
+        '/homepage/imageAm.webp',
+        '/homepage/imageBd.webp',
+        '/homepage/imageBm.webp',
+        '/homepage/imageCd.webp',
+        '/homepage/imageCm.webp',
+        '/homepage/imageDd.webp',
+        '/homepage/imageDm.webp',
+        '/homepage/newsletter.webp',
+        '/homepage/productA.webp',
+        '/homepage/productB.webp',
+        '/homepage/productC.webp',
       ]
     }
   }
