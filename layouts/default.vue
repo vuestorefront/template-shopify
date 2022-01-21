@@ -61,6 +61,7 @@ export default {
       await Promise.all([
         loadStores(),
         loadUser(),
+        loadCart(),
         loadWishlist()
       ]);
     });
