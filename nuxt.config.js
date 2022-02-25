@@ -4,7 +4,7 @@ import webpack from 'webpack';
 /** @type { import('@nuxt/types').NuxtConfig } */ 
 const config = {
   server: {
-    port: 3001,
+    port: process.env.APP_PORT || 3001,
     host: '0.0.0.0'
   },
   publicRuntimeConfig: {
@@ -42,6 +42,24 @@ const config = {
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+      {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossorigin: 'crossorigin'
+      },
+      {
+        rel: 'preload',
+        href:
+          'https://fonts.googleapis.com/css?family=Raleway:300,400,400i,500,600,700|Roboto:300,300i,400,400i,500,700&display=swap',
+        as: 'style'
+      },
+      {
+        rel: 'stylesheet',
+        href:
+          'https://fonts.googleapis.com/css?family=Raleway:300,400,400i,500,600,700|Roboto:300,300i,400,400i,500,700&display=swap',
+        media: 'print',
+        onload: 'this.media=\'all\''
+      }
     ]
   },
   loading: { color: '#fff' },
@@ -142,7 +160,7 @@ const config = {
     ]
   },
   build: {
-    transpile: ['vee-validate/dist/rules'],
+    transpile: ['vee-validate/dist/rules', 'storefront-ui'],
     plugins: [
       new webpack.DefinePlugin({
         'process.VERSION': JSON.stringify({
@@ -154,6 +172,7 @@ const config = {
     ],
     extend(config) {
       config.resolve.extensions.push('.mjs')
+
       config.module.rules.push({
         test: /\.mjs$/,
         include: /node_modules/,
@@ -241,16 +260,17 @@ const config = {
           // Match any request that ends with .png, .jpg, .jpeg or .svg .gif.
           urlPattern: /\.(?:png|jpg|jpeg|svg|woff|woff2|webp|json|gif)$/,
           // Apply a cache-first strategy.
-          handler: "CacheFirst",
+          handler: 'CacheFirst',
           options: {
             // Use a custom cache name.
-            cacheName: "SPVSF2Assets",
-            // Only cache 100 assets.
+            cacheName: 'SPVSF2Assets',
+
+            // Only cache 100 images.
             expiration: {
               maxEntries: 100,
-              maxAgeSeconds: 7200,
-            },
-          },
+              maxAgeSeconds: 7200
+            }
+          }
         },
         {
           urlPattern: process.env.NODE_ENV !== 'production' ? `//${process.env.BASE_URL}/.*` : `//${process.env.BASE_URL_PRODUCTION}/.*`,
