@@ -1,19 +1,27 @@
 <template>
   <div>
-    <LazyHydrate when-visible>
-      <TopBar class="desktop-only" />
-    </LazyHydrate>
-
-    <AppHeader />
-
+    <TopBar class="desktop-only" />
+    <AppHeader
+      :cart-total-items="getCartTotalItems"
+      :is-user-authenticated="isAuthenticated"
+    />
     <div id="layout">
-      <nuxt :key="route.fullPath"/>
-
-      <BottomNavigation />
-      <CartSidebar />
-      <WishlistSidebar />
-      <LoginModal />
-      <Notification />
+      <nuxt :key="$route.fullPath" />
+      <client-only>
+        <BottomNavigation />
+      </client-only>
+      <client-only>
+        <CartSidebar />
+      </client-only>
+      <client-only>
+        <WishlistSidebar />
+      </client-only>
+      <client-only>
+        <LoginModal />
+      </client-only>
+      <client-only>
+        <Notification />
+      </client-only>
     </div>
     <LazyHydrate when-visible>
       <AppFooter />
@@ -23,58 +31,53 @@
 
 <script>
 import AppHeader from '~/components/AppHeader.vue';
-import BottomNavigation from '~/components/BottomNavigation.vue';
-import AppFooter from '~/components/AppFooter.vue';
 import TopBar from '~/components/TopBar.vue';
-import CartSidebar from '~/components/CartSidebar.vue';
-import WishlistSidebar from '~/components/WishlistSidebar.vue';
-import LoginModal from '~/components/LoginModal.vue';
 import LazyHydrate from 'vue-lazy-hydration';
-import Notification from '~/components/Notification';
-import { onSSR } from '@vue-storefront/core';
-import { useRoute } from '@nuxtjs/composition-api';
-import { useCart, useStore, useUser, useWishlist } from '@vue-storefront/shopify';
-
+import {
+  useUser,
+  cartGetters,
+  useCart,
+} from '@vue-storefront/shopify';
+import { computed, onBeforeMount, provide } from '@nuxtjs/composition-api';
 export default {
   name: 'DefaultLayout',
-
   components: {
-    LazyHydrate,
     TopBar,
     AppHeader,
-    BottomNavigation,
-    AppFooter,
-    CartSidebar,
-    WishlistSidebar,
-    LoginModal,
-    Notification
+    LazyHydrate,
+    BottomNavigation: () => import('~/components/BottomNavigation.vue'),
+    AppFooter: () => import('~/components/AppFooter.vue'),
+    CartSidebar: () => import('~/components/CartSidebar.vue'),
+    WishlistSidebar: () => import('~/components/WishlistSidebar.vue'),
+    LoginModal: () => import('~/components/LoginModal.vue'),
+    Notification: () => import('~/components/Notification'),
   },
+  setup(_, { root }) {
+    const { load: loadUser, isAuthenticated } = useUser();
+    const { load: loadCart, cart } = useCart();
+    const getCartTotalItems = computed(() => cartGetters.getTotalItems(cart.value));
+    
+    provide('currentCart', cart);
 
-  setup() {
-    const route = useRoute();
-    const { load: loadStores } = useStore();
-    const { load: loadUser } = useUser();
-    const { load: loadCart } = useCart();
-    const { load: loadWishlist } = useWishlist();
-
-    onSSR(async () => {
-      await Promise.all([
-        loadStores(),
-        loadUser(),
-        loadCart(),
-        loadWishlist()
-      ]);
+    onBeforeMount(async () => {
+      await loadUser();
+      await loadCart().then(() => {
+        if (cart && cart.value && cart.value.orderStatusUrl !== null) {
+          root.$cookies.remove(`${root.$config.appKey}_cart_id`);
+        }
+      });
     });
 
     return {
-      route
+      getCartTotalItems,
+      isAuthenticated
     };
-  }
+  },
 };
 </script>
 
 <style lang="scss">
-@import "~@storefront-ui/vue/styles";
+@import '~@storefront-ui/vue/styles';
 
 #layout {
   box-sizing: border-box;

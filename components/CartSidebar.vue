@@ -76,12 +76,34 @@
         <transition name="sf-fade">
           <div v-if="totalItems">
             <SfProperty
+            v-if="totalDiscount"
+              name="Discount"
+              class="sf-property--full-width sf-property--large my-cart__total-price"
+            >
+              <template #value>
+                <SfPrice
+                  :regular="$n(totalDiscount.percentage ? totalDiscount.percentage/100 : totalDiscount.amount, totalDiscount.percentage ? 'percent':'currency')"
+                />
+              </template>
+            </SfProperty>
+            <SfProperty
               name="Estimated Total"
               class="sf-property--full-width sf-property--large my-cart__total-price"
             >
               <template #value>
                 <SfPrice
                   :regular="$n(totals.subtotal, 'currency')"
+                />
+              </template>
+            </SfProperty>
+            <SfProperty
+            v-if="totalSavings"
+              name="Total Savings"
+              class="sf-property--full-width sf-property--large my-cart__total-price"
+            >
+              <template #value>
+                <SfPrice
+                  :regular="$n(totalSavings, 'currency')"
                 />
               </template>
             </SfProperty>
@@ -93,7 +115,7 @@
                 {{ $t('Go to checkout') }}
               </SfButton>
             </SfLink>
-          </div>
+            </div>
           <div v-else>
             <SfButton
               class="sf-button--full-width color-primary"
@@ -111,7 +133,6 @@ import {
   SfSidebar,
   SfHeading,
   SfButton,
-  SfIcon,
   SfProperty,
   SfPrice,
   SfCollectedProduct,
@@ -119,8 +140,7 @@ import {
   SfLink,
   SfQuantitySelector
 } from '@storefront-ui/vue';
-import { computed, onBeforeMount } from '@nuxtjs/composition-api';
-import { onSSR } from '@vue-storefront/core';
+import { computed } from '@nuxtjs/composition-api';
 import { useCart, useUser, cartGetters } from '@vue-storefront/shopify';
 import { useUiState, useUiNotification } from '~/composables';
 import debounce from 'lodash.debounce';
@@ -131,7 +151,6 @@ export default {
     SfSidebar,
     SfButton,
     SfHeading,
-    SfIcon,
     SfLink,
     SfProperty,
     SfPrice,
@@ -139,38 +158,41 @@ export default {
     SfImage,
     SfQuantitySelector
   },
-  setup(_, { root }) {
+  setup() {
     const { isCartSidebarOpen, toggleCartSidebar } = useUiState();
-    const { cart, removeItem, updateItemQty, load: loadCart, loading } = useCart();
+    const { cart, removeItem, updateItemQty, loading } = useCart();
     const { isAuthenticated } = useUser();
     const { send: sendNotification, notifications } = useUiNotification();
     const products = computed(() => cartGetters.getItems(cart.value));
     const totals = computed(() => cartGetters.getTotals(cart.value));
+    const lineItemsSubtotalPrice = computed(() => cartGetters.getSubTotal(cart.value));
     const totalItems = computed(() => cartGetters.getTotalItems(cart.value));
+    const totalDiscount = computed(() => cartGetters.getTotalDiscount(cart.value));
+    const totalSavings = computed(() => {
+      let calculatedTotalSavings = 0;
+      products.value.forEach((item) => {
+        if (item.variant.compareAtPriceV2 !== null) {
+          calculatedTotalSavings +=
+            (parseFloat(item.variant.compareAtPriceV2?.amount) -
+              parseFloat(item.variant.priceV2.amount)) *
+            item.quantity;
+        }
+      });
+      if (totalDiscount.value > 0 || Object.keys(totalDiscount.value).length > 0) {
+        calculatedTotalSavings += totalDiscount.value.percentage ? cart.value.lineItemsSubtotalPrice.amount * totalDiscount.value.percentage/100 : parseFloat(totalDiscount.value.amount);
+      }
+      return calculatedTotalSavings;
+    });
     const checkoutURL = computed(() => cartGetters.getcheckoutURL(cart.value));
-
-
     const handleCheckout = (checkoutUrl) => {
       setTimeout(() => {
         window.location.replace(checkoutUrl)
       }, 400)
     }
- 
-    onSSR(async () => {
-      await loadCart();
-    });
-
-     onBeforeMount(async () => {
-        await loadCart().then(() => {
-          if (cart && cart.value.orderStatusUrl !== null) {
-            root.$cookies.remove(`${root.$config.appKey}_cart_id`); 
-          }
-        });
-    });
 
     const updateQuantity = debounce(async ({ product, quantity }) => {
       await updateItemQty({ product, quantity });
-    }, 500);
+    }, 300);
 
     return {
       updateQuantity,
@@ -183,7 +205,10 @@ export default {
       isCartSidebarOpen,
       toggleCartSidebar,
       totals,
+      lineItemsSubtotalPrice,
       totalItems,
+      totalDiscount,
+      totalSavings,
       cartGetters,
       sendNotification,
       notifications
