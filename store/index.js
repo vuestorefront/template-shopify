@@ -1,5 +1,5 @@
 export const state = () => ({
-    cartItems: null,
+    cartItems: [],
     cartTotal: 0,
 })
 

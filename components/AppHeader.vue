@@ -99,25 +99,17 @@ import {
   SfBadge,
   SfSearchBar,
   SfIcon,
-  SfOverlay,
+  SfOverlay
 } from '@storefront-ui/vue';
 import SearchResults from './SearchResults.vue';
 import debounce from 'lodash/debounce';
 import useUiState from '~/composables/useUiState';
 import { onSSR } from '@vue-storefront/core';
 import { computed, ref, useRouter } from '@nuxtjs/composition-api';
-
-import {
-  useCart,
-  useWishlist,
-  useUser,
-  cartGetters,
-  searchGetters,
-  useCategory,
-  useSearch,
-} from '@vue-storefront/shopify';
 import useUiHelpers from '~/composables/useUiHelpers';
 import LocaleSelector from './LocaleSelector';
+
+import { searchGetters, useCategory, useSearch, useWishlist } from '@vue-storefront/shopify';
 
 export default {
   components: {
@@ -129,36 +121,34 @@ export default {
     SfButton,
     SfOverlay,
     SfBadge,
-    SfSearchBar,
+    SfSearchBar
   },
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  setup() {
-    const { toggleCartSidebar, toggleWishlistSidebar, toggleLoginModal } =
-      useUiState();
+  props: {
+    cartTotalItems: {
+      type: Number,
+      default: 0
+    },
+    isUserAuthenticated: Boolean
+  },
+  
+  setup(props) {
+    const { toggleCartSidebar, toggleWishlistSidebar, toggleLoginModal } = useUiState();
     const { changeSearchTerm, getFacetsFromURL } = useUiHelpers();
-    const { isAuthenticated, load: loadUser } = useUser();
-    const { cart, load: loadCart } = useCart();
     const { search: headerSearch, result } = useSearch('header-search');
     const { search, categories } = useCategory('menuCategories');
-    const { load: loadWishlist } = useWishlist();
-    const router = useRouter()
+    const { load: loadWishlist } = useWishlist('header-wishlist');
+    const router = useRouter();
 
     const curCatSlug = ref(getFacetsFromURL().categorySlug);
-    const cartTotalItems = computed(() => {
-      const count = cartGetters.getTotalItems(cart.value);
-      return count ? count.toString() : null;
-    });
-
     const accountIcon = computed(() =>
-      isAuthenticated.value ? 'profile_fill' : 'profile'
+      props.isUserAuthenticated ? 'profile_fill' : 'profile'
     );
 
     // TODO: https://github.com/DivanteLtd/vue-storefront/issues/4927
     const handleAccountClick = () => {
-      if (isAuthenticated.value) {
+      if (props.isUserAuthenticated) {
         return router.push('/my-account');
       }
-
       toggleLoginModal();
     };
 
@@ -174,9 +164,9 @@ export default {
       }
 
       await headerSearch({
-        term: term.value,
+        term: term.value
       });
-    }, 1000);
+    }, 500);
     const closeSearch = () => {
       if (!isSearchOpen.value) return;
       term.value = '';
@@ -184,20 +174,15 @@ export default {
     };
 
     searchResults.value = {
-      products: computed(() => searchGetters.getItems(result.value)),
+      products: computed(() => searchGetters.getItems(result.value))
     };
     // #endregion Search Section
-
     onSSR(async () => {
-      await loadUser();
-      await loadCart();
       await loadWishlist();
       await search({ slug: '' });
     });
-
     return {
       accountIcon,
-      cartTotalItems,
       closeSearch,
       handleAccountClick,
       toggleCartSidebar,
@@ -208,9 +193,9 @@ export default {
       curCatSlug,
       searchResults,
       categories,
-      isSearchOpen,
+      isSearchOpen
     };
-  },
+  }
 };
 </script>
 
@@ -229,7 +214,13 @@ export default {
 }
 .navigation-wrapper {
   display: flex;
-  white-space: nowrap;
+  width: min-content;
+}
+.sf-search-bar {
+  @include for-desktop {
+    max-width: 20rem;
+    width: 100%;
+  }
 }
 .nav-item {
   .sf-header-navigation-item__item--mobile {
@@ -245,6 +236,7 @@ export default {
   left: 40%;
 }
 .sf-header-navigation-item {
+  flex: 0;
   ::v-deep &__item--mobile {
     display: block;
   }

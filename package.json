@@ -13,8 +13,8 @@
     "test:e2e": "start-server-and-test dev http://localhost:3000 test:e2e:run"
   },
   "dependencies": {
-    "@nuxtjs/device": "^2.1.0",
     "@nuxtjs/pwa": "^3.3.5",
+    "@nuxtjs/sitemap": "^2.4.0",
     "@nuxtjs/style-resources": "^1.0.0",
     "@storefront-ui/vue": "^0.11.4",
     "@vue-storefront/middleware": "~2.5.0",
