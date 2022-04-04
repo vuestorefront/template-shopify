@@ -1,7 +1,7 @@
 require('isomorphic-fetch');
 import webpack from 'webpack';
 
-/** @type { import('@nuxt/types').NuxtConfig } */ 
+/** @type { import('@nuxt/types').NuxtConfig } */
 const config = {
   server: {
     port: process.env.APP_PORT || 3001,
@@ -10,7 +10,7 @@ const config = {
   publicRuntimeConfig: {
     appKey: 'vsf2spcon',
     appVersion: Date.now(),
-    middlewareUrl: process.env.NODE_ENV === 'production' ? `https://${process.env.BASEURL}/api/`: `http://${process.env.BASEURL}/api/`
+    middlewareUrl: process.env.NODE_ENV === 'production' ? `https://${process.env.BASE_URL}/api/`: `http://${process.env.BASE_URL}/api/`
   },
   privateRuntimeConfig: {
     storeURL: process.env.SHOPIFY_DOMAIN,
@@ -40,25 +40,21 @@ const config = {
       },
       {
         rel: 'preload',
-        href:
-          'https://fonts.googleapis.com/css?family=Raleway:300,400,400i,500,600,700|Roboto:300,300i,400,400i,500,700&display=swap',
+        href: 'https://fonts.googleapis.com/css?family=Raleway:300,400,400i,500,600,700|Roboto:300,300i,400,400i,500,700&display=swap',
         as: 'style'
       },
       {
         rel: 'stylesheet',
-        href:
-          'https://fonts.googleapis.com/css?family=Raleway:300,400,400i,500,600,700|Roboto:300,300i,400,400i,500,700&display=swap',
+        href: 'https://fonts.googleapis.com/css?family=Raleway:300,400,400i,500,600,700|Roboto:300,300i,400,400i,500,700&display=swap',
         media: 'print',
-        onload: 'this.media=\'all\''
+        onload: "this.media='all'"
       }
     ]
   },
   loading: { color: '#fff' },
-  plugins: [
-    '~/plugins/scrollToTop.client.js'
-  ],
   buildModules: [
     // to core
+    './modules/cms/build',
     '@nuxtjs/composition-api/module',
     '@nuxtjs/pwa',
     '@nuxt/typescript-build',
@@ -87,7 +83,8 @@ const config = {
     'cookie-universal-nuxt',
     'vue-scrollto/nuxt',
     '@vue-storefront/middleware/nuxt',
-    '@nuxtjs/sitemap'
+    '@nuxtjs/sitemap',
+    './modules/cms/runtime'
   ],
   i18n: {
     currency: 'USD',
@@ -180,13 +177,13 @@ const config = {
       })
     ],
     extend(config) {
-      config.resolve.extensions.push('.mjs')
+      config.resolve.extensions.push('.mjs');
 
       config.module.rules.push({
         test: /\.mjs$/,
         include: /node_modules/,
         type: 'javascript/auto'
-      })
+      });
     },
     extractCSS: {
       ignoreOrder: true
@@ -296,4 +293,4 @@ const config = {
   }
 };
 
-export default config
+export default config;

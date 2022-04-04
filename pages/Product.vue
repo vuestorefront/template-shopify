@@ -31,7 +31,7 @@
       <div class="product__info">
         <div class="product__header">
           <SfHeading
-            :title="productGetters.getName(product)"
+            :title="productGetters.getFullName(product)"
             :level="3"
             class="sf-heading--no-underline sf-heading--left"
           />
@@ -215,19 +215,12 @@ import {
   SfProperty,
   SfHeading,
   SfPrice,
-  SfRating,
   SfSelect,
-  SfColorPicker,
   SfAddToCart,
   SfTabs,
   SfGallery,
   SfIcon,
-  SfImage,
-  SfBadge,
-  SfBanner,
   SfAlert,
-  SfSticky,
-  SfReview,
   SfBreadcrumbs,
   SfLoader,
   SfButton,
@@ -252,17 +245,11 @@ export default {
     SfProperty,
     SfHeading,
     SfPrice,
-    SfRating,
     SfSelect,
     SfAddToCart,
     SfTabs,
     SfGallery,
     SfIcon,
-    SfImage,
-    SfBanner,
-    SfSticky,
-    SfReview,
-    SfBadge,
     SfBreadcrumbs,
     SfButton,
     InstagramFeed,
@@ -270,14 +257,13 @@ export default {
     MobileStoreBanner,
     LazyHydrate
   },
-  beforeRouteEnter(to, from, next) {
+  beforeRouteEnter(__, from, next) {
     next((vm) => {
       vm.prevRoute = from;
     });
   },
   transition: 'fade',
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  setup(props, context) {
+  setup(_, context) {
     const breadcrumbs = ref([]);
     const atttLbl = '';
     const qty = ref(1);
@@ -302,6 +288,7 @@ export default {
           attributes: context.root.$route.query
         })[0]
     );
+
     const id = computed(() => productGetters.getId(product.value));
     const originalId = computed(() =>
       productGetters.getProductOriginalId(product.value)
@@ -320,10 +307,7 @@ export default {
       productGetters.getAttributes(products.value)
     );
     const configuration = computed(() => {
-      return productGetters.getSelectedVariant(
-        products.value,
-        context.root.$route.query
-      );
+      return productGetters.getSelectedVariant(context.root.$route.query);
     });
 
     const setBreadcrumb = () => {
@@ -385,7 +369,6 @@ export default {
       });
       await searchRelatedProducts({ productId: id.value, related: true });
     });
-
     const updateFilter = (filter) => {
       if (options.value) {
         Object.keys(options.value).forEach((attr) => {
@@ -632,6 +615,7 @@ export default {
   &__tabs {
     margin: var(--spacer-lg) auto var(--spacer-2xl);
     --tabs-title-font-size: var(--font-size--lg);
+    --tabs-title-z-index: 0;
     @include for-desktop {
       margin-top: var(--spacer-2xl);
     }

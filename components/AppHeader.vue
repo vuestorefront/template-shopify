@@ -17,22 +17,22 @@
       <template #logo>
         <nuxt-link :to="localePath('/')" class="sf-header__logo">
           <SfImage
-            src="/icons/logo.svg"
+            src="/icons/logo.webp"
             alt="Vue Storefront Next"
             class="sf-header__logo-image"
           />
         </nuxt-link>
       </template>
 
-      <template v-if="categories.length > 0" #navigation>
+      <template v-if="menus.length > 0" #navigation>
         <div class="navigation-wrapper">
           <SfHeaderNavigationItem
-            v-for="cat in categories"
-            :key="cat.id"
+            v-for="menu in menus"
+            :key="menu.id"
             class="nav-item"
-            :data-cy="'app-header-url_' + cat.handle"
-            :label="cat.title"
-            :link="localePath('/c/' + cat.handle)"
+            :data-cy="'app-header-url_' + menu.handle"
+            :label="menu.title"
+            :link="localePath(getMenuPath(menu))"
           />
         </div>
       </template>
@@ -42,18 +42,10 @@
       <template #header-icons>
         <div class="sf-header__icons">
           <SfButton
-            v-e2e="'app-header-account'"
             class="sf-button--pure sf-header__action"
             @click="handleAccountClick"
           >
             <SfIcon :icon="accountIcon" size="1.25rem" />
-          </SfButton>
-
-          <SfButton
-            class="sf-button--pure sf-header__action"
-            @click="toggleWishlistSidebar"
-          >
-            <SfIcon class="sf-header__icon" icon="heart" size="1.25rem" />
           </SfButton>
 
           <SfButton
@@ -101,19 +93,29 @@ import {
   SfIcon,
   SfOverlay
 } from '@storefront-ui/vue';
-import SearchResults from './SearchResults.vue';
+import SearchResultsComp from './SearchResults.vue';
 import debounce from 'lodash/debounce';
-import useUiState from '~/composables/useUiState';
 import { onSSR } from '@vue-storefront/core';
-import { computed, ref, useRouter } from '@nuxtjs/composition-api';
-import useUiHelpers from '~/composables/useUiHelpers';
-import LocaleSelector from './LocaleSelector';
+import {
+  computed,
+  ref,
+  useRouter,
+  useContext
+} from '@nuxtjs/composition-api';
+import { useUiHelpers, useUiState } from '~/composables';
+import LocaleSelector from './LocaleSelector.vue';
 
-import { searchGetters, useCategory, useSearch, useWishlist } from '@vue-storefront/shopify';
+import {
+  searchGetters,
+  useCategory,
+  useSearch,
+  useContent
+} from '@vue-storefront/shopify';
+import { ContentType } from '@vue-storefront/shopify';
 
 export default {
   components: {
-    SearchResults,
+    SearchResults: SearchResultsComp,
     SfHeader,
     SfImage,
     SfIcon,
@@ -130,14 +132,17 @@ export default {
     },
     isUserAuthenticated: Boolean
   },
-  
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   setup(props) {
-    const { toggleCartSidebar, toggleWishlistSidebar, toggleLoginModal } = useUiState();
+    const context = useContext();
+    const { toggleCartSidebar, toggleWishlistSidebar, toggleLoginModal } =
+      useUiState();
     const { changeSearchTerm, getFacetsFromURL } = useUiHelpers();
     const { search: headerSearch, result } = useSearch('header-search');
     const { search, categories } = useCategory('menuCategories');
-    const { load: loadWishlist } = useWishlist('header-wishlist');
     const router = useRouter();
+    const { search: getArticles, content: articlesContent } =
+      useContent('articles');
 
     const curCatSlug = ref(getFacetsFromURL().categorySlug);
     const accountIcon = computed(() =>
@@ -154,7 +159,6 @@ export default {
 
     // #region Search Section
     const isSearchOpen = ref(false);
-    const searchResults = ref(null);
     const term = ref(getFacetsFromURL().term);
     const handleSearch = debounce(async (searchTerm) => {
       if (!searchTerm.target) {
@@ -166,22 +170,47 @@ export default {
       await headerSearch({
         term: term.value
       });
+      await getArticles({
+        contentType: ContentType.Article,
+        query: term.value,
+        first: 5
+      });
     }, 500);
+
     const closeSearch = () => {
       if (!isSearchOpen.value) return;
       term.value = '';
       isSearchOpen.value = false;
     };
 
-    searchResults.value = {
-      products: computed(() => searchGetters.getItems(result.value))
-    };
+    const searchResults = computed(() =>
+      !term.value
+        ? { products: [], articles: [] }
+        : {
+            products: searchGetters.getItems(result.value),
+            articles: articlesContent?.value?.data
+          }
+    );
     // #endregion Search Section
+
     onSSR(async () => {
-      await loadWishlist();
       await search({ slug: '' });
     });
+    const menus = computed(() => [
+      ...categories.value,
+      { id: 'blogs', title: 'Blogs', handle: context.$config.cms.blogs }
+    ]);
+
+    const getMenuPath = (menu) => {
+      if (menu.id === 'blogs') {
+        return { name: 'blogs' };
+      }
+
+      return { name: 'category', params: { slug_1: menu.handle } };
+    };
+
     return {
+      getMenuPath,
       accountIcon,
       closeSearch,
       handleAccountClick,
@@ -192,7 +221,7 @@ export default {
       handleSearch,
       curCatSlug,
       searchResults,
-      categories,
+      menus,
       isSearchOpen
     };
   }
@@ -223,22 +252,24 @@ export default {
   }
 }
 .nav-item {
+  flex: 0;
   .sf-header-navigation-item__item--mobile {
     display: none;
   }
   &--mobile {
     padding: var(--spacer-xs) 0;
   }
+  ::v-deep &__item--mobile {
+    display: block;
+  }
+  ::v-deep .nuxt-link-active {
+    color: var(--c-primary);
+    --header-navigation-item-border-color: var(--c-primary);
+  }
 }
 .cart-badge {
   position: absolute;
   bottom: 40%;
   left: 40%;
-}
-.sf-header-navigation-item {
-  flex: 0;
-  ::v-deep &__item--mobile {
-    display: block;
-  }
 }
 </style>
