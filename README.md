@@ -9,6 +9,7 @@ Vue Storefront 2 template for Shopify.
 ```bash
 SHOPIFY_STOREFRONT_TOKEN=<SHOPIFY_ACCESS_TOKEN>
 SHOPIFY_DOMAIN=<SHOPIFY_DOMAIN> # example: vsf-next-pwa.myshopify.com
+BASE_URL=<API_DOMAIN> # example: localhost:3001
 ```
 
 2. Run the project
